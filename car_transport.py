@@ -103,4 +103,3 @@ class CarCommandSender:
                         self._completed_generation, generation
                     )
                     self._condition.notify_all()
-
