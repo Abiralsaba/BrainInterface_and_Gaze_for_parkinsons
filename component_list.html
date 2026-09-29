@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroWheel — Component Purchase List</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      padding: 40px 50px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a1a2e;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+    }
+
+    .header .subtitle {
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    .header .date {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 28px 0 6px 0;
+      padding: 8px 14px;
+      background: #f0f0f5;
+      border-left: 4px solid #1a1a2e;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .section-note {
+      font-size: 11.5px;
+      color: #666;
+      margin: 0 0 10px 18px;
+      font-style: italic;
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: #1a1a2e;
+      color: #ffffff;
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    thead th:nth-child(2) {
+      text-align: center;
+    }
+
+    thead th:nth-child(3) {
+      text-align: right;
+    }
+
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #e4e4ea;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafc;
+    }
+
+    tbody tr:hover {
+      background: #f0f0f5;
+    }
+
+    tbody td:nth-child(2) {
+      text-align: center;
+      font-weight: 500;
+    }
+
+    tbody td:nth-child(3) {
+      text-align: right;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── Total row ── */
+    .total-row td {
+      background: #1a1a2e !important;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 14px;
+      border: none;
+    }
+
+    .total-row td:nth-child(3) {
+      font-size: 16px;
+    }
+
+    /* ── OR divider ── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      margin: 28px 0 8px 0;
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 2px dashed #ccc;
+    }
+
+    .or-divider span {
+      padding: 0 16px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #e74c3c;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── Option labels ── */
+    .option-label {
+      display: inline-block;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      padding: 5px 16px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    .option-a {
+      background: #2563eb;
+    }
+
+    .option-b {
+      background: #16a34a;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 2px solid #1a1a2e;
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .footer strong {
+      color: #555;
+    }
+
+    /* ── Print styles ── */
+    @media print {
+      body {
+        padding: 20px 30px;
+      }
+
+      tbody tr:hover {
+        background: inherit;
+      }
+
+      .header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+      }
+
+      .section-title {
+        margin-top: 20px;
+        break-after: avoid;
+      }
+
+      table {
+        break-inside: auto;
+      }
+
+      tr {
+        break-inside: avoid;
+      }
+
+      thead {
+        display: table-header-group;
+      }
+
+      .footer {
+        margin-top: 24px;
+      }
+    }
+
+    @page {
+      size: A4;
+      margin: 15mm 12mm;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════ HEADER ════════════ -->
+  <div class="header">
+    <h1>NeuroWheel — Component Purchase List</h1>
+    <div class="subtitle">Brain-Computer Interface Wheelchair Prototype — Bangladesh Market</div>
+    <div class="date">Date: 1 September 2026 &nbsp;|&nbsp; All prices in ৳ (BDT)</div>
+  </div>
+
+  <!-- ════════════ OPTION A: NeuroSky MindWave ════════════ -->
+  <span class="option-label option-a">Option A — NeuroSky MindWave Mobile 2</span>
+
+  <!-- EEG -->
+  <div class="section-title">EEG Acquisition</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>NeuroSky MindWave Mobile 2 Headset</td><td>1</td><td>14,700</td></tr>
+      <tr><td>Rangs Power AAA Battery (2-pack)</td><td>1</td><td>70</td></tr>
+    </tbody>
+  </table>
+
+  <!-- EMG -->
+  <div class="section-title">EMG Acquisition</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>EMG Muscle Sensor V3 (with cable &amp; electrodes)</td><td>2</td><td>5,100</td></tr>
+      <tr><td>Biomedical Sensor Pads — 10 pack</td><td>1</td><td>608</td></tr>
+      <tr><td>9 V Extra-Heavy-Duty Battery</td><td>2</td><td>140</td></tr>
+      <tr><td>9 V Battery Snap Connector</td><td>2</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ADC & MCU -->
+  <div class="section-title">ADC, MCU &amp; Wireless</div>
+  <div class="section-note">Good-quality ESP32-S3 and original ADS1115 used for signal integrity</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>ADS1115 Original 16-bit ADC Module</td><td>1</td><td>570</td></tr>
+      <tr><td>ESP32-S3 DevKitC1 N16R8 (Wearable MCU)</td><td>1</td><td>1,050</td></tr>
+      <tr><td>ESP32-S3 DevKitC1 N16R8 (Wheel MCU)</td><td>1</td><td>1,050</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Power — Wearable -->
+  <div class="section-title">Power — Wearable Unit</div>
+  <div class="section-note">MP1584 buck converter — compact, efficient, low noise</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>MP1584EN Mini Buck Converter (9 V → 5 V)</td><td>1</td><td>85</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Power — Robot -->
+  <div class="section-title">Power — Robot Base</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>XW Power Eagle 2S 7.4 V 1500 mAh LiPo Battery</td><td>1</td><td>1,650</td></tr>
+      <tr><td>XT60 Connector Pair (Male + Female)</td><td>1</td><td>60</td></tr>
+      <tr><td>iMax B3 Compact 2S/3S Balance Charger</td><td>1</td><td>450</td></tr>
+      <tr><td>MP1584EN Mini Buck Converter (Logic 5.0 V)</td><td>1</td><td>85</td></tr>
+      <tr><td>MP1584EN Mini Buck Converter (Motor 5.5 V)</td><td>1</td><td>85</td></tr>
+      <tr><td>BLX-A 5×20 mm Covered Fuse Holder</td><td>1</td><td>30</td></tr>
+      <tr><td>2 A Fast-Acting Glass Fuse (5×20 mm)</td><td>2</td><td>30</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Robot Mechanics -->
+  <div class="section-title">Robot Mechanics &amp; Motor Driver</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>2WD Mobile Robot Platform Chassis (with motors &amp; wheels)</td><td>1</td><td>650</td></tr>
+      <tr><td>TB6612FNG Dual Motor Driver (1.2 A)</td><td>1</td><td>219</td></tr>
+      <tr><td>HC-SR04 Plus Ultrasonic Sensor (3.3 V)</td><td>1</td><td>93</td></tr>
+      <tr><td>AB6-V 16 mm Emergency-Stop Push Button</td><td>1</td><td>99</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Protection & Level -->
+  <div class="section-title">Signal Protection &amp; Level Shifting</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>20 kΩ ¼W Resistor Pack (5 pcs)</td><td>1</td><td>5</td></tr>
+      <tr><td>10 kΩ ¼W Resistor Pack (5 pcs)</td><td>1</td><td>5</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Eye Tracking -->
+  <div class="section-title">Eye Tracking</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>A4Tech PK-940HA 1080p Autofocus USB Webcam</td><td>1</td><td>5,000</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Connectors & Wiring -->
+  <div class="section-title">Connectors, Wiring &amp; Assembly</div>
+  <div class="section-note">Good-quality connectors for reliable signal &amp; power connections</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>JST XH2.54 Connector Kit (2/3/4/5 pin assorted)</td><td>1</td><td>120</td></tr>
+      <tr><td>400-Point Solderless Breadboard</td><td>1</td><td>88</td></tr>
+      <tr><td>Dupont Jumper Wire Set (40 pcs, 20 cm, M-F)</td><td>1</td><td>100</td></tr>
+      <tr><td>Veroboard Dot-Type (soldered assembly)</td><td>1</td><td>35</td></tr>
+      <tr><td>Heat-Shrink Tube Assorted</td><td>20</td><td>40</td></tr>
+      <tr><td>ABS Project Box (115×70×30 mm)</td><td>1</td><td>200</td></tr>
+    </tbody>
+  </table>
+
+  <!-- TOTAL A -->
+  <table>
+    <tbody>
+      <tr class="total-row">
+        <td>OPTION A — ESTIMATED TOTAL</td>
+        <td></td>
+        <td>৳ 32,377</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════ DIVIDER ════════════ -->
+  <div class="or-divider"><span>OR</span></div>
+
+  <!-- ════════════ OPTION B: Single Channel Board ════════════ -->
+  <span class="option-label option-b">Option B — Single Channel EEG Board (ADS1292R)</span>
+
+  <div class="section-title">EEG Acquisition — Single Channel Board</div>
+  <div class="section-note">ADS1292R-based module — 24-bit precision, raw EEG output, ৳7,000–8,000 range</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>ADS1292R Single-Channel EEG/ECG Acquisition Board</td><td>1</td><td>7,500</td></tr>
+      <tr><td>Ag/AgCl Dry EEG Electrode (forehead + ref + ground)</td><td>3</td><td>450</td></tr>
+      <tr><td>Electrode Snap Lead Cable (1.5 m)</td><td>3</td><td>300</td></tr>
+      <tr><td>Elastic Headband for Electrode Mounting</td><td>1</td><td>100</td></tr>
+    </tbody>
+  </table>
+
+  <!-- EMG (same) -->
+  <div class="section-title">EMG Acquisition</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>EMG Muscle Sensor V3 (with cable &amp; electrodes)</td><td>2</td><td>5,100</td></tr>
+      <tr><td>Biomedical Sensor Pads — 10 pack</td><td>1</td><td>608</td></tr>
+      <tr><td>9 V Extra-Heavy-Duty Battery</td><td>2</td><td>140</td></tr>
+      <tr><td>9 V Battery Snap Connector</td><td>2</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ADC & MCU -->
+  <div class="section-title">ADC, MCU &amp; Wireless</div>
+  <div class="section-note">Good-quality ESP32-S3 and original ADS1115 used for signal integrity</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>ADS1115 Original 16-bit ADC Module</td><td>1</td><td>570</td></tr>
+      <tr><td>ESP32-S3 DevKitC1 N16R8 (Wearable MCU)</td><td>1</td><td>1,050</td></tr>
+      <tr><td>ESP32-S3 DevKitC1 N16R8 (Wheel MCU)</td><td>1</td><td>1,050</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Power — Wearable -->
+  <div class="section-title">Power — Wearable Unit</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>MP1584EN Mini Buck Converter (9 V → 3.3 V for EEG board)</td><td>1</td><td>85</td></tr>
+      <tr><td>MP1584EN Mini Buck Converter (9 V → 5 V for ESP32)</td><td>1</td><td>85</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Power — Robot -->
+  <div class="section-title">Power — Robot Base</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>XW Power Eagle 2S 7.4 V 1500 mAh LiPo Battery</td><td>1</td><td>1,650</td></tr>
+      <tr><td>XT60 Connector Pair (Male + Female)</td><td>1</td><td>60</td></tr>
+      <tr><td>iMax B3 Compact 2S/3S Balance Charger</td><td>1</td><td>450</td></tr>
+      <tr><td>MP1584EN Mini Buck Converter (Logic 5.0 V)</td><td>1</td><td>85</td></tr>
+      <tr><td>MP1584EN Mini Buck Converter (Motor 5.5 V)</td><td>1</td><td>85</td></tr>
+      <tr><td>BLX-A 5×20 mm Covered Fuse Holder</td><td>1</td><td>30</td></tr>
+      <tr><td>2 A Fast-Acting Glass Fuse (5×20 mm)</td><td>2</td><td>30</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Robot Mechanics -->
+  <div class="section-title">Robot Mechanics &amp; Motor Driver</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>2WD Mobile Robot Platform Chassis (with motors &amp; wheels)</td><td>1</td><td>650</td></tr>
+      <tr><td>TB6612FNG Dual Motor Driver (1.2 A)</td><td>1</td><td>219</td></tr>
+      <tr><td>HC-SR04 Plus Ultrasonic Sensor (3.3 V)</td><td>1</td><td>93</td></tr>
+      <tr><td>AB6-V 16 mm Emergency-Stop Push Button</td><td>1</td><td>99</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Protection -->
+  <div class="section-title">Signal Protection &amp; Level Shifting</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>20 kΩ ¼W Resistor Pack (5 pcs)</td><td>1</td><td>5</td></tr>
+      <tr><td>10 kΩ ¼W Resistor Pack (5 pcs)</td><td>1</td><td>5</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Eye Tracking -->
+  <div class="section-title">Eye Tracking</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>A4Tech PK-940HA 1080p Autofocus USB Webcam</td><td>1</td><td>5,000</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Connectors & Wiring -->
+  <div class="section-title">Connectors, Wiring &amp; Assembly</div>
+  <table>
+    <thead><tr><th>Component</th><th>Qty</th><th>Price (৳)</th></tr></thead>
+    <tbody>
+      <tr><td>JST XH2.54 Connector Kit (2/3/4/5 pin assorted)</td><td>1</td><td>120</td></tr>
+      <tr><td>400-Point Solderless Breadboard</td><td>1</td><td>88</td></tr>
+      <tr><td>Dupont Jumper Wire Set (40 pcs, 20 cm, M-F)</td><td>1</td><td>100</td></tr>
+      <tr><td>Veroboard Dot-Type (soldered assembly)</td><td>1</td><td>35</td></tr>
+      <tr><td>Heat-Shrink Tube Assorted</td><td>20</td><td>40</td></tr>
+      <tr><td>ABS Project Box (115×70×30 mm)</td><td>1</td><td>200</td></tr>
+    </tbody>
+  </table>
+
+  <!-- TOTAL B -->
+  <table>
+    <tbody>
+      <tr class="total-row">
+        <td>OPTION B — ESTIMATED TOTAL</td>
+        <td></td>
+        <td>৳ 26,127</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════ FOOTER ════════════ -->
+  <div class="footer">
+    <strong>Notes:</strong> Prices based on Bangladesh market research (Sept 2026). Delivery charges excluded. Laptop &amp; software reused.<br>
+    <strong>Quality upgrades:</strong> ESP32-S3 N16R8 (dual USB-C, 16MB Flash, 8MB PSRAM) &bull; MP1584EN buck converters (92% efficient, compact) &bull; XT60 connectors (gold-plated, 60A rated) &bull; JST XH2.54 connectors (keyed, polarised) &bull; Original ADS1115 ADC.<br>
+    <strong>Print to PDF:</strong> Use Ctrl+P (or ⌘+P on Mac) → Save as PDF.
+  </div>
+
+</body>
+</html>
