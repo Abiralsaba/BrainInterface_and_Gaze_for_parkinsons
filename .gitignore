@@ -2,3 +2,12 @@
 __pycache__/
 *.pyc
 calibration.json
+.DS_Store
+
+# Locally generated EEG recordings and calibration artifacts
+eeg_*.csv
+eeg_*.json
+eeg_*.png
+
+# Empty local scratch script
+sr.sh
