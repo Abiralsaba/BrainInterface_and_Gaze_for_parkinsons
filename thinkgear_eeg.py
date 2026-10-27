@@ -12,6 +12,8 @@ import argparse
 import csv
 import json
 import math
+import multiprocessing
+import queue
 import sys
 import time
 from collections import deque
@@ -322,13 +324,18 @@ class CsvRecorder:
 
 
 class LivePlot:
-    def __init__(self, state: EEGState, show_detection: bool = False) -> None:
+    def __init__(
+        self,
+        state: EEGState,
+        show_detection: bool = False,
+        dark: bool = True,
+    ) -> None:
         import matplotlib.pyplot as plt
 
         self.plt = plt
         self.state = state
         self.show_detection = show_detection
-        self.figure = plt.figure(figsize=(12, 9), constrained_layout=True)
+        self.figure = plt.figure(figsize=(10, 7))
         grid = self.figure.add_gridspec(
             4,
             4,
@@ -341,9 +348,15 @@ class LivePlot:
         }
         self.raw_axis = self.figure.add_subplot(grid[3, :])
         self.metric_lines = {
-            "attention": self.metrics_axis.plot([], [], label="attention")[0],
-            "meditation": self.metrics_axis.plot([], [], label="meditation")[0],
-            "signal": self.metrics_axis.plot([], [], label="poor signal", alpha=0.7)[0],
+            "attention": self.metrics_axis.plot(
+                [], [], label="attention", color="#32b8ff", linewidth=2
+            )[0],
+            "meditation": self.metrics_axis.plot(
+                [], [], label="meditation", color="#ff9f43", linewidth=2
+            )[0],
+            "signal": self.metrics_axis.plot(
+                [], [], label="poor signal", color="#4cd964", linewidth=2
+            )[0],
         }
         if show_detection:
             self.metric_lines["detection"] = self.metrics_axis.plot(
@@ -355,10 +368,16 @@ class LivePlot:
                 drawstyle="steps-post",
             )[0]
         self.band_lines = {
-            name: self.band_axes[name].plot([], [])[0]
-            for name in BAND_NAMES
+            name: self.band_axes[name].plot(
+                [], [], color="#32b8ff", linewidth=1.5
+            )[0] for name in BAND_NAMES
         }
-        (self.raw_line,) = self.raw_axis.plot([], [], color="black", linewidth=0.8)
+        (self.raw_line,) = self.raw_axis.plot(
+            [],
+            [],
+            color="tab:cyan" if dark else "black",
+            linewidth=0.8,
+        )
 
         self.metrics_axis.set_ylabel("value")
         self.metrics_axis.set_ylim(-2, 202)
@@ -375,9 +394,34 @@ class LivePlot:
         self.raw_axis.set_ylabel("raw")
         self.raw_axis.set_xlabel("latest raw samples")
         self.raw_axis.grid(alpha=0.25)
+        if dark:
+            self._apply_dark_theme()
+        self.figure.tight_layout()
         self.figure.canvas.manager.set_window_title("ThinkGear EEG monitor")
         plt.ion()
         plt.show(block=False)
+
+    def _apply_dark_theme(self) -> None:
+        background = "#080b10"
+        panel = "#111820"
+        foreground = "#e6edf3"
+        grid = "#607080"
+        self.figure.patch.set_facecolor(background)
+        for axis in (self.metrics_axis, *self.band_axes.values(), self.raw_axis):
+            axis.set_facecolor(panel)
+            axis.tick_params(colors=foreground)
+            axis.xaxis.label.set_color(foreground)
+            axis.yaxis.label.set_color(foreground)
+            axis.title.set_color(foreground)
+            for spine in axis.spines.values():
+                spine.set_color(grid)
+            axis.grid(color=grid, alpha=0.28)
+        legend = self.metrics_axis.get_legend()
+        if legend is not None:
+            legend.get_frame().set_facecolor(panel)
+            legend.get_frame().set_edgecolor(grid)
+            for label in legend.get_texts():
+                label.set_color(foreground)
 
     def update(self) -> bool:
         if not self.plt.fignum_exists(self.figure.number):
@@ -388,7 +432,11 @@ class LivePlot:
         self.metric_lines["signal"].set_data(times, list(self.state.signal))
         if self.show_detection:
             self.metric_lines["detection"].set_data(times, list(self.state.detection))
-            if self.state.latest_detection is None:
+            has_data = bool(times or self.state.band_times or self.state.raw_samples)
+            if not has_data:
+                title = "WAITING FOR EEG SERIAL DATA — CHECK PORT"
+                color = "#ffbd2e"
+            elif self.state.latest_detection is None:
                 title = "DETECTED: NO USABLE SIGNAL"
                 color = "tab:red"
             elif self.state.latest_detection:
@@ -421,6 +469,103 @@ class LivePlot:
         self.figure.canvas.draw_idle()
         self.figure.canvas.flush_events()
         return True
+
+
+def _apply_plot_snapshot(state: EEGState, snapshot: dict) -> None:
+    state.started = snapshot["started"]
+    state.history_seconds = snapshot["history_seconds"]
+    state.times = deque(snapshot["times"])
+    state.signal = deque(snapshot["signal"])
+    state.attention = deque(snapshot["attention"])
+    state.meditation = deque(snapshot["meditation"])
+    state.detection = deque(snapshot["detection"])
+    state.band_times = deque(snapshot["band_times"])
+    state.band_values = {
+        name: deque(values) for name, values in snapshot["band_values"].items()
+    }
+    state.raw_samples = deque(snapshot["raw_samples"], maxlen=512)
+    state.latest_signal = snapshot["latest_signal"]
+    state.latest_attention = snapshot["latest_attention"]
+    state.latest_meditation = snapshot["latest_meditation"]
+    state.latest_detection = snapshot["latest_detection"]
+    state.latest_bands = dict(snapshot["latest_bands"])
+
+
+def _live_plot_process_main(
+    snapshots,
+    stop_event,
+    history_seconds: float,
+    show_detection: bool,
+    dark: bool,
+) -> None:
+    """Own Matplotlib's event loop outside the camera/OpenCV process."""
+    state = EEGState(history_seconds)
+    plot = LivePlot(state, show_detection=show_detection, dark=dark)
+    try:
+        while not stop_event.is_set():
+            latest = None
+            try:
+                latest = snapshots.get(timeout=0.05)
+                while True:
+                    latest = snapshots.get_nowait()
+            except queue.Empty:
+                pass
+            if latest is not None:
+                _apply_plot_snapshot(state, latest)
+                if not plot.update():
+                    break
+            else:
+                plot.figure.canvas.flush_events()
+                if not plot.plt.fignum_exists(plot.figure.number):
+                    break
+    finally:
+        plot.plt.close(plot.figure)
+
+
+class LivePlotProcess:
+    """Run the live graph independently so it cannot reduce camera FPS."""
+
+    def __init__(
+        self,
+        history_seconds: float = 30.0,
+        show_detection: bool = False,
+        dark: bool = True,
+    ) -> None:
+        context = multiprocessing.get_context("spawn")
+        self._snapshots = context.Queue(maxsize=1)
+        self._stop = context.Event()
+        self._process = context.Process(
+            target=_live_plot_process_main,
+            args=(
+                self._snapshots,
+                self._stop,
+                history_seconds,
+                show_detection,
+                dark,
+            ),
+            name="eeg-live-plot",
+            daemon=True,
+        )
+        self._process.start()
+
+    def publish(self, snapshot: dict) -> bool:
+        if not self._process.is_alive():
+            return False
+        try:
+            self._snapshots.put_nowait(snapshot)
+        except queue.Full:
+            # The graph is still drawing. Drop this frame rather than delaying
+            # the safety/control loop; a newer snapshot will arrive shortly.
+            pass
+        return True
+
+    def close(self) -> None:
+        self._stop.set()
+        self._process.join(timeout=2.0)
+        if self._process.is_alive():
+            self._process.terminate()
+            self._process.join(timeout=1.0)
+        self._snapshots.close()
 
 
 class FocusDetector:
