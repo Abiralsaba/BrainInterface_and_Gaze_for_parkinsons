@@ -1,33 +1,39 @@
 #!/usr/bin/env bash
-# ──────────────────────────────────────────────
-#  NeuroWheel — Start Script
-#  Activates the virtual environment, installs
-#  dependencies if needed, and launches the app.
-# ──────────────────────────────────────────────
 
-set -e
+# macOS launcher for the gaze keyboard only.
+# This does not start EEG reading, the live graph, or rover control.
+set -euo pipefail
 
-# Resolve the project root (directory where this script lives)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+PYTHON_BIN="$SCRIPT_DIR/.venv/bin/python"
+APP="$SCRIPT_DIR/camera_app.py"
+MODEL="$SCRIPT_DIR/models/face_landmarker.task"
+CALIBRATION="$SCRIPT_DIR/calibration.json"
 
-VENV_DIR="$SCRIPT_DIR/.venv"
-
-# Create venv if it doesn't exist
-if [ ! -d "$VENV_DIR" ]; then
-    echo "🔧 Creating virtual environment..."
-    python3 -m venv "$VENV_DIR"
+if [[ ! -x "$PYTHON_BIN" ]]; then
+    echo "Error: the project virtual environment is missing." >&2
+    echo "Create it with: python3 -m venv $SCRIPT_DIR/.venv" >&2
+    echo "Then install: $SCRIPT_DIR/.venv/bin/python -m pip install --no-compile -r $SCRIPT_DIR/requirements.txt" >&2
+    exit 1
 fi
 
-# Activate venv
-source "$VENV_DIR/bin/activate"
-
-# Install dependencies if requirements.txt exists
-if [ -f "requirements.txt" ]; then
-    echo "📦 Checking dependencies..."
-    pip install -q -r requirements.txt
+if [[ ! -f "$APP" ]]; then
+    echo "Error: camera_app.py was not found in $SCRIPT_DIR" >&2
+    exit 1
 fi
 
-# Launch the app (pass any CLI args through)
-echo "🚀 Starting NeuroWheel camera app..."
-python camera_app.py "$@"
+if [[ ! -f "$MODEL" ]]; then
+    echo "Error: face tracking model is missing: $MODEL" >&2
+    exit 1
+fi
+
+if [[ -f "$CALIBRATION" ]]; then
+    echo "Starting gaze keyboard with saved calibration"
+else
+    echo "No saved eye calibration found; guided calibration will start"
+fi
+
+exec "$PYTHON_BIN" "$APP" \
+    --model "$MODEL" \
+    --calibration "$CALIBRATION" \
+    "$@"
